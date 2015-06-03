@@ -62,13 +62,12 @@ def test_wait_one():
 def test_wait_multiple():
     RE.run(wait_multiple([motor1, motor2], det))
 
-#def test_conditional_hard_pause():
-#    RE.run(conditional_hard_pause(motor, det))
-#    assert_equal(RE.state, 'paused')
+def test_conditional_hard_pause():
+    RE.run(conditional_hard_pause(motor, det))
+    #assert_equal(RE.state, 'paused')
     #RE.resume()
     #assert_equal(RE.state, 'paused')
     #RE.abort()
-    #assert_raises(Exception, f)
 
 def test_simple_scan_saving():
     RE.run(simple_scan_saving(motor, det))
@@ -85,6 +84,7 @@ def test_stateful_subscription():
     RE.unsubscribe(token)
 
 def test_stepscan():
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
     my_plotter = live_scalar_plotter(ax, 'intensity', 'pos')
     RE.run(stepscan(motor, det), subscriptions={'event': my_plotter})
