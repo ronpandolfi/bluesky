@@ -184,6 +184,15 @@ class RunEngineStateMachine(StateMachine):
     class Meta:
         allow_empty = False
         initial_state = 'idle'
+        transitions = {
+            'idle': ['aborting', 'running', 'panicked'],
+            'running': ['idle', 'paused'],
+            'aborting': ['paused'],
+            'soft_pausing': ['running', 'soft_pausing'],
+            'hard_pausing': ['running', 'soft_pausing', 'hard_pausing'],
+            'paused': ['soft_pausing', 'hard_pausing'],
+            # can transit to 'panicked' from any other state
+        }
         named_transitions = [
             ('soft_pause', 'soft_pausing', ['running']),
             ('hard_pause', 'hard_pausing', ['running', 'soft_pausing']),
