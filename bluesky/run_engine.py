@@ -1,3 +1,4 @@
+import asyncio
 import os
 import time as ttime
 import sys
@@ -505,10 +506,10 @@ class RunEngine:
         doc = dict(uid=self._run_start_uid, time=ttime.time(), **metadata)
         self.debug("*** Emitted RunStart:\n%s" % doc)
         self.emit('start', doc)
-        response = None
         reason = ''
-        try:
-            self._check_for_trouble()
+        @asyncio.coroutine
+        def work():
+            response = None
             while True:
                 # Send last response; get new message but don't process it yet.
                 msg = gen.send(response)
@@ -520,13 +521,19 @@ class RunEngine:
                 response = self._command_registry[msg.command](msg)
                 self.debug('RE.state: ' + self.state)
                 self.debug('msg: {}\n   response: {}'.format(msg, response))
-        except StopIteration:
+        try:
+            self._check_for_trouble()
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(work())
             self._exit_status = 'success'
         except Exception as err:
             self._exit_status = 'fail'
             reason = str(err)
             raise err
         finally:
+            loop.close()
             # in case we were interrupted between 'configure' and 'deconfigure'
             for obj in self._configured:
                 obj.deconfigure()
