@@ -265,7 +265,6 @@ class AreaDetector(SignalDetector):
 
         return status
 
-    trigger = acquire
 
 
 class AreaDetectorFileStore(AreaDetector):
