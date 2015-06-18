@@ -14,7 +14,7 @@ import time
 from ..session import register_object
 
 
-class SatusBase():
+class StatusBase():
     """
     This is a base class that provides a single-slot
     call back for finished.
