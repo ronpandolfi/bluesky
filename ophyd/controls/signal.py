@@ -455,12 +455,7 @@ class SkepticalSignal(EpicsSignal):
         old_time = cur['timestamp']
 
         def local(old_value, value, timestamp, **kwargs):
-            if value == 0.0:
-                # check if the IOC is returning invalid data
-                # as a valued, but special, value
-                # this is dicey, but so be it
-                return
-            elif old_time == timestamp:
+            if old_time == timestamp:
                 # the time stamp has not changed.  Given that
                 # this function is being called by a subscription
                 # on value changed, this should never happen
@@ -473,6 +468,11 @@ class SkepticalSignal(EpicsSignal):
         self.subscribe(local, self.SUB_VALUE)
 
         return d
+
+    def _set_readback(value, timestamp):
+        if value == 0.0:
+            return
+        return super()._set_readback(value, timestamp)
 
 
 class SignalGroup(OphydObject):
