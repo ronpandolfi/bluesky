@@ -469,10 +469,10 @@ class SkepticalSignal(EpicsSignal):
 
         return d
 
-    def _set_readback(value, timestamp):
+    def _set_readback(self, value, **kwargs):
         if value == 0.0:
             return
-        return super()._set_readback(value, timestamp)
+        return super()._set_readback(value, **kwargs)
 
 
 class SignalGroup(OphydObject):
