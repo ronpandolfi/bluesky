@@ -609,18 +609,20 @@ class RunEngine:
         except (StopIteration, RequestStop):
             self._exit_status = 'success'
             yield from asyncio.sleep(0.001)  # TODO Do we need this?
-        except (FailedPause, RequestAbort, asyncio.CancelledError):
+        except (FailedPause, RequestAbort, asyncio.CancelledError) as err:
             self._exit_status = 'abort'
             yield from asyncio.sleep(0.001)  # TODO Do we need this?
             if isinstance(self._exception, PanicError):
                 logger.critical("RE paniced")
                 self._exit_status = 'fail'
                 raise self._exception
-            logger.error("Run aborted")
+            logger.error("Run aborted due to cancelation")
+            logger.error(str(err))
         except Exception as err:
             self._exit_status = 'fail'  # Exception raises during 'running'
             self._reason = str(err)
-            logger.error("Run aborted")
+            logger.error("Run aborted due to failure")
+            logger.error(str(err))
             raise err
         finally:
             self.state = 'idle'
