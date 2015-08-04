@@ -322,19 +322,18 @@ class Tweak(_PrimitiveScan):
         from bluesky.standard_config import gs
         MASTER_DET = gs.MASTER_DET
         MASTER_DET_FIELD = gs.MASTER_DET_FIELD
-        return super().__call__(MASTER_DET, MASTER_DET_FIELD, motor,
+        return super().__call__(MASTER_DET, MASTER_DET_FIELD, moto,
                                 step, **kwargs)
 
 
 def _set_acquire_time(time):
     from bluesky.standard_config import gs
-    if time is None:
-        time = gs.COUNT_TIME
     original_times = {}
     for det in gs.DETS:
         if hasattr(det, 'count_time'):
             original_times[det] = det.count_time
-            det.count_time = time
+            if time is not None:
+                det.count_time = time
     return original_times
 
 
