@@ -838,6 +838,7 @@ class RunEngine:
             p_event = asyncio.Event()
 
             def done_callback():
+                ttime.sleep(getattr(msg.obj, 'settle_time', 0))
                 loop.call_soon_threadsafe(p_event.set)
 
             ret.finished_cb = done_callback
