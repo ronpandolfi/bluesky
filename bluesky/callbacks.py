@@ -257,7 +257,7 @@ class LiveTable(CallbackBase):
     max_post_decimal = 2
 
     def __init__(self, fields=None, rowwise=True, print_header_interval=50,
-                 max_post_decimal=2, max_pre_decimal=5, data_field_width=12,
+                 max_post_decimal=4, max_pre_decimal=5, data_field_width=12,
                  logbook=None):
         self.data_field_width = data_field_width
         self.max_pre_decimal = max_pre_decimal
