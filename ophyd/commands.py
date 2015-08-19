@@ -1,3 +1,4 @@
+
 """Command Line Interface to opyd objects"""
 
 from __future__ import print_function
@@ -370,7 +371,7 @@ def log_pos(positioners=None):
     pdict = {}
     pdict['objects'] = repr(positioners)
     pdict['values'] = repr({p.name: p.position for p in positioners})
-    
+
     if logbook:
         id = logbook.log(msg, properties={'OphydPositioners': pdict},
                          ensure=True)
@@ -590,7 +591,9 @@ def catch_keyboard_interrupt(positioners):
         for p in positioners:
             p.stop()
             print("{}[--] Stopping {}{}".format(tc.Red, tc.LightRed, p.name))
-
+        print(tc.Normal, end='')
+        blink(True)
+        raise
     print(tc.Normal, end='')
     blink(True)
 
