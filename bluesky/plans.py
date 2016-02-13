@@ -66,6 +66,7 @@ class PlanBase(Struct):
         for name, funcs in subs.items():
             for func in funcs:
                 token = yield Msg('subscribe', None, name, func)
+                print('adding token', token)
                 tokens.add(token)
 
         yield Msg('open_run', **self.md)
@@ -78,6 +79,7 @@ class PlanBase(Struct):
         yield Msg('wait', None, '_flyers')
         yield Msg('close_run')
         for token in tokens:
+            print('unsubscribing token', token)
             yield Msg('unsubscribe', None, token)
         yield from self._post()
         yield Msg('checkpoint')

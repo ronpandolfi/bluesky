@@ -88,9 +88,6 @@ The response from 'read' -- ``reading``, above -- is formatted like:
 
      {<name>: {'value': <value>, 'timestamp': <timestamp>}, ...}
 
-For a detailed technical description of the messages and their responses,
-see :doc:`msg`.
-
 Sleeping
 --------
 

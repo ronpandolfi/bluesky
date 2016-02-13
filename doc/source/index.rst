@@ -65,3 +65,4 @@ Robustness
    metadata 
    custom-plans
    simple_api
+   release_notes

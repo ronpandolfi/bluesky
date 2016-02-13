@@ -682,10 +682,19 @@ class RunEngine:
                     # Send last response;
                     # get new message but don't process it yet.
                     try:
-                        msg = self._genstack[-1].send(
-                            response if not self._new_gen else None)
+                        if self._new_gen:
+                            print('gen is new, sending None')
+                        else:
+                            print('sending response', response)
+                        if response == 4:
+                            self._genstack[-1].send(4)
+                            print('4 was sent')
+                        else:
+                            msg = self._genstack[-1].send(
+                                response if not self._new_gen else None)
 
                     except StopIteration:
+                        print('StopIteration')
                         self._genstack.pop()
                         if len(self._genstack):
                             continue
@@ -700,9 +709,13 @@ class RunEngine:
                         coro = self._command_registry[msg.command]
                         self.log.debug("Processing %r", msg)
                         response = yield from coro(msg)
+                        if msg.command in ['subscribe', 'unsubscribe']:
+                            print('response is', response)
                     except KeyboardInterrupt:
                         raise
                     except Exception as e:
+                        if msg.command in ['subscribe', 'unsubscribe']:
+                            print('response is', response)
                         self._genstack[-1].throw(e)
                     self.log.debug("Response: %r", response)
                 except KeyboardInterrupt:
@@ -1183,10 +1196,13 @@ class RunEngine:
         This, like subscriptions passed to __call__, will be removed at the
         end by the RunEngine.
         """
+        print('subscribe msg is', msg)
         self.log.debug("Adding subsription %r", msg)
         _, obj, args, kwargs = msg
         token = self.subscribe(*args, **kwargs)
+        print('token from dispatcher is', token)
         self._temp_callback_ids.add(token)
+        print('returning token', token)
         return token
 
     @asyncio.coroutine
@@ -1196,6 +1212,7 @@ class RunEngine:
         where subscriptions are wanted for some runs but not others.
         """
         self.log.debug("Removing subscription %r", msg)
+        print(msg)
         _, obj, args, kwargs = msg
         try:
             token = kwargs['token']
