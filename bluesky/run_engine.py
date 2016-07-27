@@ -1,5 +1,6 @@
 import asyncio
 import time as ttime
+import math
 import sys
 import logging
 from warnings import warn
@@ -21,7 +22,7 @@ from .utils import (CallbackRegistry, SignalHandler, normalize_subs_input,
                     RequestAbort, RequestStop,  RunEngineInterrupted,
                     IllegalMessageSequence, FailedPause, FailedStatus,
                     InvalidCommand, PlanHalt, Msg, ensure_generator,
-                    single_gen)
+                    single_gen, status_progress_bar)
 
 
 def expiring_function(func, loop, *args, **kwargs):
@@ -1490,7 +1491,7 @@ class RunEngine:
                 self.loop.call_soon_threadsafe(p_event.set)
 
             ret.finished_cb = done_callback
-            self._groups[group].add(p_event.wait())
+            self._groups[group].add((ret, p_event.wait()))
 
         return ret
 
@@ -1525,7 +1526,7 @@ class RunEngine:
                 self.loop.call_soon_threadsafe(p_event.set)
 
             ret.finished_cb = done_callback
-            self._groups[group].add(p_event.wait())
+            self._groups[group].add((ret, p_event.wait()))
 
         return ret
 
@@ -1645,7 +1646,8 @@ class RunEngine:
                 self.loop.call_soon_threadsafe(p_event.set)
 
             ret.finished_cb = done_callback
-            self._groups[group].add(p_event.wait())
+            fut = p_event.wait()
+            self._groups[group].add((ret, p_event.wait()))
 
         return ret
 
@@ -1677,7 +1679,7 @@ class RunEngine:
                 self.loop.call_soon_threadsafe(p_event.set)
 
             ret.finished_cb = done_callback
-            self._groups[group].add(p_event.wait())
+            self._groups[group].add((ret, p_event.wait()))
 
         return ret
 
@@ -1688,7 +1690,7 @@ class RunEngine:
 
         Expected message object is:
 
-            Msg('wait', group=<GROUP>)
+            Msg('wait', group=<GROUP>, *, progress=False)
 
         where ``<GROUP>`` is any hashable key.
         """
@@ -1696,7 +1698,14 @@ class RunEngine:
             group, = msg.args
         else:
             group = msg.kwargs['group']
-        futs = list(self._groups.pop(group, []))
+        statuses, futs = list(zip(*self._groups.pop(group)))
+        if msg.kwargs.get('progress'):
+            # Poll the status objecst and show a progress bar (uses tqdm).
+            yield from status_progress_bar(*statuses, loop=self.loop)
+
+            # If some status has been marked failed, it will be handled
+            # just below via the usual route, in the closure given to
+            # the Future.
         if futs:
             yield from self._wait_for(Msg('wait_for', None, futs))
 
@@ -1722,11 +1731,24 @@ class RunEngine:
 
         Expected message object is:
 
-            Msg('sleep', None, sleep_time)
+            Msg('sleep', None, sleep_time, *, progress=False)
 
         where `sleep_time` is in seconds
         """
-        yield from asyncio.sleep(*msg.args, loop=self.loop)
+        sleep_time, = msg.args
+        if msg.kwargs.get('progress'):
+            from tqdm import tqdm
+            POLL_TIME = 0.1
+            pbar = tqdm(total=math.ceil(sleep_time / POLL_TIME))
+            while True:
+                sleep_time_chunk = min(POLL_TIME, sleep_time)
+                sleep_time -= sleep_time_chunk
+                yield from asyncio.sleep(sleep_time_chunk, loop=self.loop)
+                pbar.update()
+                if sleep_time_chunk < POLL_TIME:
+                    break
+
+        yield from asyncio.sleep(sleep_time, loop=self.loop)
 
     @asyncio.coroutine
     def _pause(self, msg):

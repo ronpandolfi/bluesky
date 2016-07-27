@@ -899,3 +899,18 @@ def test_prompt_stop(fresh_RE, cancel_func):
 def test_bad_from_idle_transitions(fresh_RE, change_func):
     with pytest.raises(TransitionError):
         change_func(fresh_RE)
+
+
+def test_sleep_with_progress_bar(fresh_RE):
+    fresh_RE(Msg('sleep', None, 0.1, progress=True))
+
+
+def test_wait_with_progress_bar(fresh_RE):
+    motor1 = Mover('motor1', ['motor1'])
+    motor2 = Mover('motor2', ['motor2'])
+    fresh_RE([Msg('set', motor1, 5, group='foo'),
+              Msg('wait', group='foo', progress=True)])
+
+    fresh_RE([Msg('set', motor1, 5, group='foo'),
+              Msg('set', motor2, 5, group='foo'),
+              Msg('wait', group='foo', progress=True)])
