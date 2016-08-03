@@ -22,7 +22,7 @@ from .utils import (CallbackRegistry, SignalHandler, normalize_subs_input,
                     RequestAbort, RequestStop,  RunEngineInterrupted,
                     IllegalMessageSequence, FailedPause, FailedStatus,
                     InvalidCommand, PlanHalt, Msg, ensure_generator,
-                    single_gen, status_progress_bar)
+                    single_gen, async_status_progress_bar)
 
 
 def expiring_function(func, loop, *args, **kwargs):
@@ -1701,7 +1701,7 @@ class RunEngine:
         statuses, futs = list(zip(*self._groups.pop(group)))
         if msg.kwargs.get('progress'):
             # Poll the status objecst and show a progress bar (uses tqdm).
-            yield from status_progress_bar(*statuses, loop=self.loop)
+            yield from async_status_progress_bar(*statuses, loop=self.loop)
 
             # If some status has been marked failed, it will be handled
             # just below via the usual route, in the closure given to
