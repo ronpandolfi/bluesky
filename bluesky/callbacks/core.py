@@ -90,6 +90,7 @@ class LivePlot(CallbackBase):
     ----------
     y : str
         the name of a data field in an Event
+
     x : str, optional
         the name of a data field in an Event
         If None, use the Event's sequence number.
@@ -101,9 +102,9 @@ class LivePlot(CallbackBase):
         passed to Axes.set_xlim
     ylim : tuple, optional
         passed to Axes.set_ylim
-    fig : Figure, optional
-        matplotib Figure; if none specified, current figure (``plt.gcf()``)
-        is used.
+    ax : Axes, optional
+        matplotib Axes; if none specified, current axes (``plt.gca()``)
+        are used.
     All additional keyword arguments are passed through to ``Axes.plot``.
 
     Examples
@@ -112,7 +113,7 @@ class LivePlot(CallbackBase):
     >>> RE(my_scan, my_plotter)
     """
     def __init__(self, y, x=None, legend_keys=None, xlim=None, ylim=None,
-                 fig=None, **kwargs):
+                 ax=None, **kwargs):
         super().__init__()
         if fig is None:
             # overplot (or, if no fig exists, one is made)
@@ -126,8 +127,7 @@ class LivePlot(CallbackBase):
         else:
             self.x = None
         self.y, *others = _get_obj_fields([y])
-        self.fig = fig
-        self.ax = fig.gca()
+        self.ax = plt.gca()
         self.ax.set_ylabel(y)
         self.ax.set_xlabel(x or 'sequence #')
         if xlim is not None:
@@ -266,13 +266,18 @@ class LiveMesh(CallbackBase):
     cmap : str or colormap, optional
        The color map to use
 
+    ax : Axes, optional
+        matplotib Axes; if none specified, current axes (``plt.gca()``)
+        are used.
+
     See Also
     --------
     :class:`bluesky.callbacks.LiveRaster`.
     """
     def __init__(self, x, y, I, *, xlim=None, ylim=None,
-                 clim=None, cmap='viridis'):
-        fig, ax = plt.subplots()
+                 clim=None, cmap='viridis', ax=None):
+        if ax is None:
+            ax = plt.gca()
         self.x = x
         self.y = y
         self.I = I
@@ -282,7 +287,6 @@ class LiveMesh(CallbackBase):
         self._sc = []
         self.ax = ax
         ax.margins(.1)
-        self.fig = fig
         self._xdata, self._ydata, self._Idata = [], [], []
         self._norm = mcolors.Normalize()
 
@@ -347,20 +351,25 @@ class LiveRaster(CallbackBase):
     aspect : str or float, optional
        Passed through to `Axes.imshow`
 
+    ax : Axes, optional
+        matplotib Axes; if none specified, current axes (``plt.gca()``)
+        are used.
+
     See Also
     --------
     :class:`bluesky.callbacks.LiveMesh`.
     """
     def __init__(self, raster_shape, I, *,
                  clim=None, cmap='viridis',
-                 xlabel='x', ylabel='y', extent=None, aspect='equal'):
-        fig, ax = plt.subplots()
+                 xlabel='x', ylabel='y', extent=None, aspect='equal',
+                 ax=None):
+        if ax is None:
+            ax = plt.gca()
         self.I = I
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_aspect('equal')
         self.ax = ax
-        self.fig = fig
         self._Idata = np.ones(raster_shape) * np.nan
         self._norm = mcolors.Normalize()
         if clim is not None:
@@ -385,7 +394,7 @@ class LiveRaster(CallbackBase):
                                                       uid=doc['uid'][:6]))
         self.snaking = doc.get('snaking', (False, False))
 
-        cb = self.fig.colorbar(im)
+        cb = self.ax.figure.colorbar(im)
         cb.set_label(self.I)
 
     def event(self, doc):
