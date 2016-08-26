@@ -34,6 +34,8 @@ Enhancements
 * Built-in plans return the run uid that they generated.
 * Add a new ``ramp_plan`` for taking data while polling the status of a
   movement.
+* The axes used by ``LiveRaster`` and ``LiveMesh`` is configurable through a
+  new, optional ``ax`` argument.
 
 Bug Fixes
 ^^^^^^^^^
@@ -47,6 +49,8 @@ API Changes
   to pass through return values cleanly.
 * Remove "lossy" subscriptions feature, rendered unnecessary by the utility for
   processing documents in separate processes (see Enhancements, above).
+* The optional, undocumented ``fig`` argument to ``LivePlot`` has been removed.
+  An ``ax`` argument has been added.
 
 v0.6.2
 ------
